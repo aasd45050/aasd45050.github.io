@@ -1,435 +1,77 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GlobalChat</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  :root[data-theme="light"] {
-    --bg-primary: #ffffff; --bg-secondary: #f4f4f5; --bg-tertiary: #e4e4e7; --bg-input: #ffffff;
-    --text-primary: #18181b; --text-secondary: #52525b; --text-muted: #a1a1aa; --border: #d4d4d8;
-    --accent: #6366f1; --accent-hover: #4f46e5; --accent-text: #ffffff;
-    --msg-own: #ede9fe; --msg-own-text: #3730a3; --msg-other: #f4f4f5; --msg-other-text: #18181b;
-    --mod-badge: #fef3c7; --mod-badge-text: #92400e; --danger: #ef4444; --online: #22c55e;
-    --shadow: 0 1px 3px rgba(0,0,0,0.1); --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
-  }
-  :root[data-theme="dark"] {
-    --bg-primary: #18181b; --bg-secondary: #27272a; --bg-tertiary: #3f3f46; --bg-input: #27272a;
-    --text-primary: #fafafa; --text-secondary: #a1a1aa; --text-muted: #71717a; --border: #3f3f46;
-    --accent: #818cf8; --accent-hover: #a5b4fc; --accent-text: #1e1b4b;
-    --msg-own: #312e81; --msg-own-text: #c7d2fe; --msg-other: #27272a; --msg-other-text: #fafafa;
-    --mod-badge: #451a03; --mod-badge-text: #fbbf24; --danger: #f87171; --online: #4ade80;
-    --shadow: 0 1px 3px rgba(0,0,0,0.4); --shadow-lg: 0 4px 12px rgba(0,0,0,0.5);
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg-secondary); color: var(--text-primary);
-    height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
-    transition: background 0.2s, color 0.2s;
-  }
-  .header {
-    background: var(--bg-primary); border-bottom: 1px solid var(--border);
-    padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem;
-    flex-shrink: 0; box-shadow: var(--shadow);
-  }
-  .header-logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.1rem; color: var(--accent); }
-  .header-logo svg { width: 24px; height: 24px; }
-  .header-info { flex: 1; }
-  .header-title { font-size: 0.9rem; font-weight: 600; }
-  .header-sub { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.3rem; }
-  .online-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--online); display: inline-block; }
-  .icon-btn {
-    background: none; border: 1px solid var(--border); border-radius: 8px;
-    padding: 0.4rem; cursor: pointer; color: var(--text-secondary);
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s, color 0.15s; width: 34px; height: 34px;
-  }
-  .icon-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
-  .icon-btn svg { width: 18px; height: 18px; }
-
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem;
-  }
-  .modal {
-    background: var(--bg-primary); border: 1px solid var(--border);
-    border-radius: 16px; padding: 2rem; width: 100%; max-width: 380px; box-shadow: var(--shadow-lg);
-  }
-  .modal h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.4rem; }
-  .modal p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem; }
-  .modal label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
-  .modal input[type="text"] {
-    width: 100%; padding: 0.65rem 0.9rem; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary);
-    font-size: 0.95rem; outline: none; transition: border-color 0.15s; margin-bottom: 1rem;
-  }
-  .modal input:focus { border-color: var(--accent); }
-  .modal-hint {
-    font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.5rem;
-    padding: 0.6rem 0.8rem; background: var(--bg-secondary); border-radius: 8px;
-    border-left: 3px solid var(--accent); line-height: 1.5;
-  }
-  .btn-primary {
-    width: 100%; padding: 0.7rem; background: var(--accent); color: var(--accent-text);
-    border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600;
-    cursor: pointer; transition: background 0.15s, transform 0.1s;
-  }
-  .btn-primary:hover { background: var(--accent-hover); }
-  .btn-primary:active { transform: scale(0.98); }
-  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-  .chat-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; max-width: 860px; width: 100%; margin: 0 auto; }
-  .messages-area { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; scroll-behavior: smooth; }
-  .messages-area::-webkit-scrollbar { width: 5px; }
-  .messages-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-
-  .sys-msg { text-align: center; font-size: 0.75rem; color: var(--text-muted); padding: 0.3rem 0; user-select: none; }
-  .sys-msg span { background: var(--bg-secondary); padding: 0.2rem 0.7rem; border-radius: 99px; border: 1px solid var(--border); }
-
-  .msg-group { display: flex; gap: 0.6rem; align-items: flex-end; max-width: 80%; position: relative; }
-  .msg-group.own { flex-direction: row-reverse; align-self: flex-end; }
-  .msg-group.other { align-self: flex-start; }
-  .msg-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #fff; user-select: none; }
-  .msg-content { display: flex; flex-direction: column; gap: 0.25rem; }
-  .msg-group.own .msg-content { align-items: flex-end; }
-  .msg-meta { font-size: 0.7rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; }
-  .msg-name { font-weight: 600; color: var(--text-secondary); }
-  .mod-tag { font-size: 0.62rem; padding: 0.1rem 0.4rem; border-radius: 4px; background: var(--mod-badge); color: var(--mod-badge-text); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-  .msg-bubble { padding: 0.55rem 0.85rem; border-radius: 14px; font-size: 0.9rem; line-height: 1.5; word-break: break-word; position: relative; }
-  .msg-group.own .msg-bubble { background: var(--msg-own); color: var(--msg-own-text); border-bottom-right-radius: 4px; }
-  .msg-group.other .msg-bubble { background: var(--msg-other); color: var(--msg-other-text); border-bottom-left-radius: 4px; }
-  .delete-btn {
-    display: none; position: absolute; top: -8px; right: -8px;
-    width: 22px; height: 22px; border-radius: 50%; background: var(--danger);
-    color: white; border: 2px solid var(--bg-primary); cursor: pointer;
-    align-items: center; justify-content: center; font-size: 12px; z-index: 5; transition: transform 0.1s;
-  }
-  .delete-btn:hover { transform: scale(1.15); }
-  .msg-bubble:hover .delete-btn { display: flex; }
-
-  .input-area {
-    background: var(--bg-primary); border-top: 1px solid var(--border);
-    padding: 0.75rem 1rem; display: flex; gap: 0.5rem; align-items: flex-end; flex-shrink: 0;
-  }
-  .input-wrap { flex: 1; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; padding: 0.5rem 0.85rem; gap: 0.5rem; transition: border-color 0.15s; }
-  .input-wrap:focus-within { border-color: var(--accent); }
-  .input-wrap textarea { flex: 1; background: none; border: none; outline: none; color: var(--text-primary); font-size: 0.9rem; resize: none; max-height: 120px; line-height: 1.5; font-family: inherit; }
-  .input-wrap textarea::placeholder { color: var(--text-muted); }
-  .send-btn { background: var(--accent); border: none; border-radius: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--accent-text); flex-shrink: 0; transition: background 0.15s, transform 0.1s; }
-  .send-btn:hover { background: var(--accent-hover); }
-  .send-btn:active { transform: scale(0.94); }
-  .send-btn svg { width: 18px; height: 18px; }
-  .send-btn:disabled, .input-wrap textarea:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .mod-banner { display: none; background: var(--mod-badge); color: var(--mod-badge-text); font-size: 0.78rem; font-weight: 600; text-align: center; padding: 0.4rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-  .mod-banner.show { display: block; }
-  .status-bar { text-align: center; font-size: 0.72rem; color: var(--text-muted); padding: 0.3rem; background: var(--bg-secondary); flex-shrink: 0; }
-  .status-bar.error { color: var(--danger); }
-  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--bg-primary); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 1.2rem; font-size: 0.82rem; color: var(--text-primary); box-shadow: var(--shadow-lg); opacity: 0; transition: opacity 0.2s, transform 0.2s; z-index: 50; white-space: nowrap; pointer-events: none; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  @media (max-width: 600px) { .msg-group { max-width: 92%; } .modal { padding: 1.5rem; } }
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pea.k.vu Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="wrap">
 
-<div class="modal-overlay" id="setupModal">
-  <div class="modal">
-    <h2>🌐 GlobalChat</h2>
-    <p>Chat with people around the world — messages are stored and synced globally.</p>
-    <label for="usernameInput">Your name</label>
-    <input type="text" id="usernameInput" placeholder="Enter a username..." maxlength="24" autocomplete="off" onkeydown="if(event.key==='Enter')joinChat()">
-    <button class="btn-primary" id="joinBtn" onclick="joinChat()">Join Chat →</button>
+<main>
+<section class="view hero" id="v-home">
+  <h1 class="logo"><i></i>Pea.k.vu</h1>
+  <h2>Six games.<br>Zero sign-ups.</h2>
+  <p>Pea.k.vu is a tiny arcade. Pick a game, beat your best score, and come back to beat it again.</p>
+  <div class="tiles">
+    <a class="tile" href="#snake"><h3>Snake</h3><p>Eat, grow, and don’t hit your own tail.</p><b>Best: <span id="hb-snake">0</span></b></a>
+    <a class="tile" href="#reflex"><h3>Reflex</h3><p>Wait for yellow, then tap as fast as you can.</p><b>Best: <span id="hb-reflex">none</span></b></a>
+    <a class="tile" href="#td"><h3>Tower Defence</h3><p>Ten levels. Stop every wave before it reaches the exit.</p><b>Reached: <span id="hb-td">Level 1</span></b></a>
+    <a class="tile" href="#mem"><h3>Memory Match</h3><p>Flip cards and find all eight pairs in the fewest moves.</p><b>Best: <span id="hb-mem">none</span></b></a>
+    <a class="tile" href="#2048"><h3>2048</h3><p>Slide and merge tiles to reach 2048.</p><b>Best: <span id="hb-2048">0</span></b></a>
+    <a class="tile" href="#whack"><h3>Whack-a-Mole</h3><p>Thirty seconds. Hit every mole that pops up.</p><b>Best: <span id="hb-whack">0</span></b></a>
   </div>
+</section>
+
+<section class="view" id="v-snake">
+  <div class="bar"><a class="back" href="#home">← Home</a><h2>Snake</h2><div class="stats"><div><span>Score</span><b id="sc">0</b></div><div><span>Best</span><b id="sb">0</b></div></div></div>
+  <div class="board"><canvas id="cv" width="400" height="400" aria-label="Snake game board"></canvas>
+  <div class="pads"><button class="pad" data-d="U" aria-label="Up">▲</button><button class="pad" data-d="L" aria-label="Left">◀</button><button class="pad" data-d="D" aria-label="Down">▼</button><button class="pad" data-d="R" aria-label="Right">▶</button></div></div>
+  <p class="hint" id="shint">Press Space or tap Start. Steer with arrow keys, WASD, or swipe.</p>
+  <p style="text-align:center"><button class="btn" id="sstart">Start game</button></p>
+</section>
+
+<section class="view" id="v-reflex">
+  <div class="bar"><a class="back" href="#home">← Home</a><h2>Reflex</h2><div class="stats"><div><span>Last</span><b id="rl">–</b></div><div><span>Best</span><b id="rb">–</b></div></div></div>
+  <div class="board"><button id="zone" type="button">Tap to start</button></div>
+  <div class="log" id="log" aria-live="polite"></div>
+  <p class="hint">Tap too early and the round resets. Your last five times show above.</p>
+</section>
+<section class="view" id="v-td">
+  <div class="bar"><a class="back" href="#home">← Home</a><h2>Tower Defence</h2><div class="stats"><div><span>Lives</span><b id="tdlv">15</b></div><div><span>Cash</span><b id="tdcs">0</b></div></div></div>
+  <div class="lvs" id="lvs" role="group" aria-label="Levels"></div>
+  <div class="board"><canvas id="tdc" width="480" height="320" aria-label="Tower defence board"></canvas>
+  <div class="tools" id="tools"><button class="tool" data-t="dart" aria-pressed="true">Dart $50</button><button class="tool" data-t="cannon" aria-pressed="false">Cannon $110</button><button class="tool" data-t="frost" aria-pressed="false">Frost $70</button><button class="tool" data-t="sell" aria-pressed="false">Sell</button></div></div>
+  <p class="hint" id="tdmsg"></p>
+  <p class="hint">Dart: fast single shots. Cannon: splash damage. Frost: slows enemies. Sell refunds 60%.</p>
+  <p style="text-align:center"><button class="btn" id="tds">Start level 1</button> <button class="tool" id="tdx">Speed 1×</button></p>
+</section>
+<section class="view" id="v-mem">
+  <div class="bar"><a class="back" href="#home">← Home</a><h2>Memory Match</h2><div class="stats"><div><span>Moves</span><b id="mm">0</b></div><div><span>Best</span><b id="mb">–</b></div></div></div>
+  <div class="board"><div class="grid4" id="mg"></div></div>
+  <p class="hint" id="mh">Flip two cards to find a pair.</p>
+  <p style="text-align:center"><button class="btn" id="mr">New game</button></p>
+</section>
+
+<section class="view" id="v-2048">
+  <div class="bar"><a class="back" href="#home">← Home</a><h2>2048</h2><div class="stats"><div><span>Score</span><b id="g2s">0</b></div><div><span>Best</span><b id="g2b">0</b></div></div></div>
+  <div class="board"><div class="g2048" id="g2" aria-label="2048 board"></div></div>
+  <p class="hint" id="g2h"></p>
+  <p style="text-align:center"><button class="btn" id="g2r">New game</button></p>
+</section>
+
+<section class="view" id="v-whack">
+  <div class="bar"><a class="back" href="#home">← Home</a><h2>Whack-a-Mole</h2><div class="stats"><div><span>Score</span><b id="ws">0</b></div><div><span>Time</span><b id="wt">30</b></div><div><span>Best</span><b id="wb">0</b></div></div></div>
+  <div class="board"><div class="holes" id="wh"></div></div>
+  <p class="hint" id="wm">Press Start, then hit each mole as it pops up.</p>
+  <p style="text-align:center"><button class="btn" id="wstart">Start</button></p>
+</section>
+</main>
+<footer>Pea.k.vu · Scores are saved in this browser only.</footer>
 </div>
 
-<header class="header">
-  <div class="header-logo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-    </svg>
-    GlobalChat
-  </div>
-  <div class="header-info">
-    <div class="header-title"># global</div>
-    <div class="header-sub"><span class="online-dot"></span><span id="onlineCount">connecting...</span></div>
-  </div>
-  <div class="header-actions">
-    <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle theme">
-      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-      </svg>
-    </button>
-  </div>
-</header>
-
-<div class="mod-banner" id="modBanner">🛡️ You are a moderator — hover any message to delete it</div>
-<div class="status-bar" id="statusBar">Waiting to connect...</div>
-
-<div class="chat-wrapper">
-  <div class="messages-area" id="messagesArea"></div>
-  <div class="input-area">
-    <div class="input-wrap">
-      <textarea id="msgInput" placeholder="Message #global..." rows="1" maxlength="500"
-        onkeydown="handleKey(event)" oninput="autoResize(this)" disabled></textarea>
-    </div>
-    <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled aria-label="Send">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-      </svg>
-    </button>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-const SUPABASE_URL = 'https://ybwdeqaibageaeapugak.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlid2RlcWFpYmFnZWFlYXB1Z2FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI4OTksImV4cCI6MjA5NzYyODg5OX0.BJ5oGQMQmlHCyCuQfsfuChQsl4W5RWS_MYKenBGIjzc';
-
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const COLORS = ['#6366f1','#8b5cf6','#ec4899','#14b8a6','#f59e0b','#3b82f6','#10b981','#ef4444','#f97316','#06b6d4'];
-const avatarColors = {};
-let username = '', isMod = false;
-const renderedIds = new Set();
-
-function getColor(name) {
-  if (!avatarColors[name]) {
-    avatarColors[name] = COLORS[Object.keys(avatarColors).length % COLORS.length];
-  }
-  return avatarColors[name];
-}
-function initials(name) { return name.slice(0,2).toUpperCase(); }
-function fmtTime(ts) { return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function scrollToBottom() { const a = document.getElementById('messagesArea'); a.scrollTop = a.scrollHeight; }
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-function setStatus(msg, err) {
-  const s = document.getElementById('statusBar');
-  s.textContent = msg; s.className = 'status-bar' + (err ? ' error' : '');
-}
-
-async function joinChat() {
-  const input = document.getElementById('usernameInput');
-  const name = input.value.trim();
-  if (!name) { input.focus(); return; }
-  const btn = document.getElementById('joinBtn');
-  btn.disabled = true; btn.textContent = 'Joining...';
-
-  if (name.toUpperCase() === 'JADMINISTRATOR') {
-    username = 'Mod_' + Math.floor(Math.random()*9000+1000);
-    isMod = true;
-    document.getElementById('modBanner').classList.add('show');
-  } else {
-    username = name;
-    if (name === 'JADMIN') {
-      isMod = true;
-      document.getElementById('modBanner').classList.add('show');
-    }
-  }
-
-  document.getElementById('setupModal').style.display = 'none';
-  document.getElementById('msgInput').disabled = false;
-  document.getElementById('sendBtn').disabled = false;
-  document.getElementById('msgInput').focus();
-  updateOnlineCount();
-
-  // Subscribe first, then load history once the channel is confirmed open.
-  // This closes the gap where messages arrive between loadMessages() finishing
-  // and subscribeToMessages() being called.
-  subscribeToMessages();
-}
-
-async function loadMessages() {
-  setStatus('Loading messages...');
-  const { data, error } = await db
-    .from('messages')
-    .select('*')
-    .order('created_at', { ascending: true })
-    .limit(100);
-
-  if (error) {
-    setStatus('Could not load messages: ' + error.message, true);
-    return;
-  }
-
-  document.getElementById('messagesArea').innerHTML = '';
-  renderedIds.clear();
-
-  if (!data || data.length === 0) {
-    addSystemMsg('No messages yet — be the first to say something! 👋');
-  } else {
-    addSystemMsg('Last ' + data.length + ' messages loaded');
-    data.forEach(msg => renderMessage(msg));
-  }
-  setStatus('✓ Connected — messages sync in real time');
-  scrollToBottom();
-}
-
-function subscribeToMessages() {
-  setStatus('Connecting...');
-
-  db.channel('public:messages')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-      if (!renderedIds.has(payload.new.id)) {
-        renderMessage(payload.new);
-        scrollToBottom();
-      }
-    })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, payload => {
-      const el = document.getElementById('msg-' + payload.old.id);
-      if (el) {
-        el.style.transition = 'opacity 0.2s, transform 0.2s';
-        el.style.opacity = '0'; el.style.transform = 'scale(0.95)';
-        setTimeout(() => { el.remove(); addSystemMsg('🛡️ A message was removed by a moderator'); }, 200);
-      }
-    })
-    .subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        await loadMessages();
-        startPolling();
-      }
-      if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-        setStatus('Realtime unavailable — using polling', false);
-        await loadMessages();
-        startPolling();
-      }
-    });
-
-  // Safety net: if realtime never fires within 4s, load and poll anyway
-  setTimeout(async () => {
-    if (renderedIds.size === 0) {
-      await loadMessages();
-      startPolling();
-    }
-  }, 4000);
-}
-
-let pollInterval = null;
-let lastSeenCreatedAt = null;
-
-function startPolling() {
-  if (pollInterval) return;
-  pollInterval = setInterval(async () => {
-    try {
-      let query = db.from('messages').select('*').order('created_at', { ascending: true }).limit(50);
-      if (lastSeenCreatedAt) query = query.gt('created_at', lastSeenCreatedAt);
-      const { data, error } = await query;
-      if (error || !data) return;
-      let hadNew = false;
-      data.forEach(msg => {
-        if (!renderedIds.has(msg.id)) {
-          renderMessage(msg);
-          hadNew = true;
-        }
-        lastSeenCreatedAt = msg.created_at;
-      });
-      if (hadNew) scrollToBottom();
-    } catch(e) {}
-  }, 2000);
-}
-
-function updateOnlineCount() {
-  let count = Math.floor(Math.random() * 30) + 8;
-  document.getElementById('onlineCount').textContent = count + ' online';
-  setInterval(() => {
-    count = Math.max(3, count + Math.floor(Math.random()*5) - 2);
-    document.getElementById('onlineCount').textContent = count + ' online';
-  }, 12000);
-}
-
-function renderMessage(msg) {
-  renderedIds.add(msg.id);
-  const isOwn = msg.username === username;
-  const color = getColor(msg.username);
-  const area = document.getElementById('messagesArea');
-
-  const group = document.createElement('div');
-  group.className = 'msg-group ' + (isOwn ? 'own' : 'other');
-  group.id = 'msg-' + msg.id;
-
-  const avatar = document.createElement('div');
-  avatar.className = 'msg-avatar';
-  avatar.style.background = color;
-  avatar.textContent = initials(msg.username);
-
-  const content = document.createElement('div');
-  content.className = 'msg-content';
-
-  const meta = document.createElement('div');
-  meta.className = 'msg-meta';
-  const modTag = msg.is_mod ? '<span class="mod-tag">MOD</span>' : '';
-  meta.innerHTML = isOwn
-    ? `<span>${fmtTime(msg.created_at)}</span>${modTag}`
-    : `<span class="msg-name">${escHtml(msg.username)}</span>${modTag}<span>${fmtTime(msg.created_at)}</span>`;
-
-  const bubble = document.createElement('div');
-  bubble.className = 'msg-bubble';
-  bubble.textContent = msg.content;
-
-  if (isMod) {
-    const del = document.createElement('button');
-    del.className = 'delete-btn';
-    del.title = 'Delete message';
-    del.innerHTML = '✕';
-    del.onclick = () => deleteMessage(msg.id);
-    bubble.appendChild(del);
-  }
-
-  content.appendChild(meta);
-  content.appendChild(bubble);
-  group.appendChild(avatar);
-  group.appendChild(content);
-  area.appendChild(group);
-}
-
-async function sendMessage() {
-  const input = document.getElementById('msgInput');
-  const text = input.value.trim();
-  if (!text || !username) return;
-  input.value = ''; input.style.height = '';
-  document.getElementById('sendBtn').disabled = true;
-
-  const { error } = await db.from('messages').insert({ username, content: text, is_mod: isMod });
-  document.getElementById('sendBtn').disabled = false;
-
-  if (error) { showToast('Failed to send: ' + error.message); input.value = text; }
-}
-
-async function deleteMessage(id) {
-  const { error } = await db.from('messages').delete().eq('id', id);
-  if (error) showToast('Delete failed: ' + error.message);
-  else showToast('Message deleted');
-}
-
-function addSystemMsg(text) {
-  const area = document.getElementById('messagesArea');
-  const div = document.createElement('div');
-  div.className = 'sys-msg';
-  div.innerHTML = `<span>${escHtml(text)}</span>`;
-  area.appendChild(div);
-  scrollToBottom();
-}
-
-function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
-function autoResize(el) { el.style.height = ''; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  const icon = document.getElementById('themeIcon');
-  icon.innerHTML = isDark
-    ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
-    : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
-}
-</script>
+<script src="script.js"></script>
 </body>
 </html>
