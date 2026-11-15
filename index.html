@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d0b">
+  <meta name="description" content="ORB1TAL — your launchpad for quick-play browser games.">
+  <title>ORB1TAL — Play beyond ordinary</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script src="assets/js/config.js"></script>
+  <script defer src="assets/js/games.js"></script>
+  <script defer src="assets/js/app.js"></script>
+  <script defer src="assets/js/effects.js"></script>
+  <script defer src="assets/js/easteregg.js"></script>
+</head>
+<body>
+  <div id="bgFade" aria-hidden="true"></div>
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <div id="cursorGlow" aria-hidden="true"></div>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <main id="homeView" class="simple-home">
+    <header class="simple-heading">
+      <h1>ORB<span id="adminEasterEgg" title=" " aria-label="ORB1TAL">1</span>TAL</h1>
+      <p>Unblocked games? (not tested yet)</p>
+    </header>
+    <section class="simple-library" aria-label="Games">
+      <div class="game-grid" id="gameGrid"></div>
+      <div class="empty-state" id="emptyState" hidden><h3>No games found</h3></div>
+    </section>
+  </main>
+  <p class="site-credit">Made by <a href="https://discord.com/users/1377936429497319484" target="_blank" rel="noopener noreferrer">YS1390</a></p>
+
+  <section id="playerView" class="player-view" hidden>
+    <button class="back-button" id="backButton" aria-label="Back to ORB1TAL"><span>←</span> Back</button>
+    <div class="game-stage"><iframe id="gameFrame" title="Game player" allow="fullscreen; autoplay; gamepad; clipboard-read; clipboard-write" allowfullscreen></iframe></div>
+  </section>
+
+  <script src="assets/js/boot.js"></script>
+</body>
+</html>
