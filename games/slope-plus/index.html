@@ -1,0 +1,177 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<title>Slope</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Slope is an exciting 3D game where you guide a rolling ball down a steep slope, dodging obstacles and making sharp turns. Test your reflexes in this addictive, endless runner packed with vibrant visuals and nonstop action!">
+
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #050806;
+  }
+
+  .loading-screen {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .left-column {
+    width: 100%;
+    padding: 20px;
+    background-color: #0b110e;
+    color: #f2f7f3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    z-index: 2;
+    transition: 1s;
+  }
+
+  .loading-title {
+    margin: 0;
+    font-size: 36px;
+    color: #54d68a;
+  }
+
+  .loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .loading-circle {
+    width: 25px;
+    height: 25px;
+    border: 4px solid transparent;
+    border-top: 3px solid #54d68a;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 15px;
+  }
+
+  .loading-text {
+    margin: 0;
+    text-align: center;
+    color: #9fb8ad;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .buttons {
+    display: flex;
+    gap: 15px;
+  }
+
+  .home-button, .skip-loading {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 5px;
+    color: #fff;
+    transition: 0.5s;
+    background-color: #444444b0;
+  }
+
+  .home-button:hover, .skip-loading:hover {
+    box-shadow: 0px 0px 10px #000000;
+  }
+
+  @keyframes closeload {
+    from { transform: scale(1.0); opacity: 1; }
+    to { transform: scale(2.0); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loadingcontainer" style="transition: 0.5s; background-color: #050806; position: fixed; width: 100%; height: 100%; display: block; z-index: 100000;">
+  <div class="loading-screen">
+    <div id="leftside" class="left-column">
+      <h1 class="loading-title">Slope</h1>
+      <div class="loading-content">
+        <div class="loading-circle"></div>
+        <p class="loading-text">Your Game Is Loading</p>
+      </div>
+      <div class="buttons">
+        <a href="../../index.html">
+          <button class="home-button">Home</button>
+        </a>
+        <button class="skip-loading" onclick="skipload()">Skip Loading</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.addEventListener('load', function() {
+    donewithload();
+  });
+
+  function skipload() {
+    donewithload();
+  }
+
+  function donewithload() {
+    setTimeout(() => {
+      document.getElementById('leftside').style.transform = 'translateX(-200%)';
+      setTimeout(() => {
+        document.getElementById('leftside').style.opacity = 0;
+      }, 500);
+      setTimeout(() => {
+        document.getElementById('loadingcontainer').style.animation = 'closeload 0.5s';
+        setTimeout(() => {
+          document.getElementById('loadingcontainer').style.display = 'none';
+        }, 450);
+      }, 300);
+    }, 500);
+  }
+</script>
+
+<iframe frameBorder="0" id="game" style="text-align: center; align-items: center; overflow: hidden; width: 100%; position: fixed; top: 0; left: 0; border: 0;" src="" allowfullscreen></iframe>
+
+<div style="transition: 0.5s; cursor: pointer; position: fixed; border-radius: 15px; color: rgb(224, 224, 224); background-color: #1d1d1dc0; left: 0; bottom: 0px; margin: 10px; z-index: 5;" id="Menu">
+  <span class="material-icons buttonForMenu" style="margin: 5px;" onclick="window.location = '../../index.html'">arrow_back</span>
+  <span class="material-icons buttonForMenu" style="margin: 5px;" onclick="makeFullScreen()">fullscreen</span>
+  <script>
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    document.getElementById('Menu').style.transform = isMobile ? "scale(1.1)" : "scale(1.0)";
+  </script>
+</div>
+
+<script>
+  var canvas = document.getElementById('game');
+
+  function makeFullScreen() {
+    var element = canvas;
+    var requestMethod = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || element.msRequestFullscreen;
+    if (requestMethod) {
+      requestMethod.call(element);
+    }
+  }
+
+  function fitGame() {
+    canvas.style.height = window.innerHeight + 'px';
+    canvas.style.width = window.innerWidth + 'px';
+  }
+  fitGame();
+  window.addEventListener('resize', fitGame);
+
+  canvas.src = 'https://sz-games.github.io/slope/';
+</script>
+
+</body>
+</html>
