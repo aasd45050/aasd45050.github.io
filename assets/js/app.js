@@ -21,12 +21,17 @@
       .sort((a,b)=>(rank(a.g.id)-rank(b.g.id))||(a.i-b.i))
       .map(x=>x.g);
   }
+  // Label comes from the status name, so older saved labels can't go out of date.
+  const STATUS_TEXT = {up:'Up', unstable:'Unstable', 'very-unstable':'Blocked', down:'Down'};
+  function statusText(current){
+    return STATUS_TEXT[current.status] || current.statusLabel;
+  }
   function card(g){
     const current = getStatus(g);
     return `<article class="game-card theme-${g.accent}">
       <button class="card-launch" data-play="${g.id}" aria-label="Play ${escapeHTML(g.title)}">
         <div class="card-info">
-          <div class="game-card-topline"><span class="game-status status-${current.status}" aria-label="Status: ${escapeHTML(current.statusLabel)}"><i aria-hidden="true"></i>${escapeHTML(current.statusLabel)}</span></div>
+          <div class="game-card-topline"><span class="game-status status-${current.status}" aria-label="Status: ${escapeHTML(statusText(current))}"><i aria-hidden="true"></i>${escapeHTML(statusText(current))}</span></div>
           <h3>${escapeHTML(g.title)}</h3><p>${escapeHTML(g.description)}</p>
           <div class="card-bottom"><span class="launch-label">PLAY NOW <b>↗</b></span></div>
         </div>

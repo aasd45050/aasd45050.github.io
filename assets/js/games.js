@@ -5,6 +5,6 @@ window.ORBITAL_GAMES = [
   {id:'angry-birds-2',title:'Angry Birds 2',category:'Action',description:'Line up your shot, launch your flock and topple those towers.',tag:'PHYSICS ACTION',accent:'coral',symbol:'◉',status:'up',statusLabel:'Up',featured:true},
   {id:'block-blast',title:'Block Blast',category:'Puzzle',description:'Fit the shapes, clear the board and keep your streak alive.',tag:'BLOCK PUZZLE',accent:'blue',symbol:'▦',status:'unstable',statusLabel:'Unstable'},
   {id:'cookie-clicker',title:'Cookie Clicker',category:'Casual',description:'Bake cookies, build your empire and watch the numbers climb.',tag:'IDLE CLASSIC',accent:'gold',symbol:'●',status:'up',statusLabel:'Up'},
-  {id:'snake',title:'Slither.io',category:'Arcade',description:'Grow your snake by eating orbs and outlast the other snakes on the map.',tag:'ARCADE IO',accent:'green',symbol:'〰',status:'very-unstable',statusLabel:'Very unstable'},
+  {id:'snake',title:'Slither.io',category:'Arcade',description:'Grow your snake by eating orbs and outlast the other snakes on the map.',tag:'ARCADE IO',accent:'green',symbol:'〰',status:'very-unstable',statusLabel:'Blocked'},
   {id:'angry-birds',title:'Angry Birds',category:'Action',description:'Take aim and send the birds flying in this physics-based classic.',tag:'PHYSICS ACTION',accent:'coral',symbol:'◉',status:'up',statusLabel:'Up'}
 ];

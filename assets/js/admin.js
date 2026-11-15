@@ -8,7 +8,7 @@
   const options = [
     {value:'up',label:'🟢 Up'},
     {value:'unstable',label:'🟡 Unstable'},
-    {value:'very-unstable',label:'🟠 Very unstable'},
+    {value:'very-unstable',label:'🟠 Blocked'},
     {value:'down',label:'🔴 Down'}
   ];
   let state = { statuses: {}, order: [] };
